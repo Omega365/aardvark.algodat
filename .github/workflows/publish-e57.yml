@@ -43,14 +43,33 @@ jobs:
           }
           "PACKAGE_VERSION=$packageVersion" | Out-File -FilePath $env:GITHUB_ENV -Append
 
+      - name: Clean package output folder
+        shell: pwsh
+        run: |
+          if (Test-Path "bin/pack") {
+            Remove-Item -Recurse -Force "bin/pack"
+          }
+          New-Item -ItemType Directory -Path "bin/pack" | Out-Null
+
       - name: Pack E57
-        shell: cmd
-        run: dotnet pack src\Aardvark.Data.E57\Aardvark.Data.E57.csproj -c Release --no-build -o bin\pack -p:Version=%PACKAGE_VERSION% -p:PackageVersion=%PACKAGE_VERSION%
+        shell: pwsh
+        run: |
+          dotnet pack src/Aardvark.Data.E57/Aardvark.Data.E57.csproj -c Release --no-build -o bin/pack -p:Version=$env:PACKAGE_VERSION -p:PackageVersion=$env:PACKAGE_VERSION
+
+      - name: Verify expected package exists
+        shell: pwsh
+        run: |
+          $expected = "bin/pack/Aardvark.Data.E57.$env:PACKAGE_VERSION.nupkg"
+          if (-not (Test-Path $expected)) {
+            Write-Host "Produced packages:"
+            Get-ChildItem "bin/pack" -Filter "Aardvark.Data.E57*.nupkg" | ForEach-Object { Write-Host $_.Name }
+            throw "Expected package was not produced: $expected"
+          }
 
       - name: Add private NuGet source
         shell: cmd
         run: dotnet nuget add source "${{ secrets.OMEGA365_NUGET_URL }}" -n Omega365 -u unused -p "${{ secrets.O365_NUGET_API_KEY }}" --store-password-in-clear-text
 
       - name: Push E57 package to private feed
-        shell: cmd
-        run: dotnet nuget push "bin\pack\Aardvark.Data.E57*.nupkg" -s Omega365 -k az
+        shell: pwsh
+        run: dotnet nuget push "bin/pack/Aardvark.Data.E57.$env:PACKAGE_VERSION.nupkg" -s Omega365 -k az
