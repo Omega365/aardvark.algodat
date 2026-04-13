@@ -34,10 +34,8 @@ jobs:
         run: dotnet build -c Release src\Aardvark.Data.E57\Aardvark.Data.E57.csproj
 
       - name: Pack E57
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         shell: cmd
-        run: dotnet aardpack src\Aardvark.Data.E57\Aardvark.Data.E57.csproj --notag --skip-build
+        run: dotnet pack src\Aardvark.Data.E57\Aardvark.Data.E57.csproj -c Release --no-build -o bin\pack
 
       - name: Add private NuGet source
         shell: cmd
@@ -45,4 +43,4 @@ jobs:
 
       - name: Push E57 package to private feed
         shell: cmd
-        run: dotnet nuget push "bin\pack\Aardvark.Data.E57*.nupkg" -s Omega365 -k az --skip-duplicate
+        run: dotnet nuget push "bin\pack\Aardvark.Data.E57*.nupkg" -s Omega365 -k az
