@@ -51,6 +51,20 @@ jobs:
           }
           New-Item -ItemType Directory -Path "bin/pack" | Out-Null
 
+      - name: Align release notes version for pack
+        shell: pwsh
+        run: |
+          $releaseNotesPath = "RELEASE_NOTES.md"
+          if (-not (Test-Path $releaseNotesPath)) {
+            throw "RELEASE_NOTES.md not found"
+          }
+          $content = Get-Content $releaseNotesPath -Raw
+          $updated = [regex]::Replace($content, "(?m)^###\s+.+$", "### $env:PACKAGE_VERSION", 1)
+          if ($updated -eq $content) {
+            throw "Could not find top release heading in RELEASE_NOTES.md"
+          }
+          Set-Content -Path $releaseNotesPath -Value $updated -NoNewline
+
       - name: Pack E57
         shell: pwsh
         run: |
