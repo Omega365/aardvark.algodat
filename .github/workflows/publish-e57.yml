@@ -33,9 +33,19 @@ jobs:
         shell: cmd
         run: dotnet build -c Release src\Aardvark.Data.E57\Aardvark.Data.E57.csproj
 
+      - name: Read package version from csproj
+        shell: pwsh
+        run: |
+          [xml]$project = Get-Content "src/Aardvark.Data.E57/Aardvark.Data.E57.csproj"
+          $packageVersion = $project.Project.PropertyGroup.PackageVersion | Where-Object { $_ } | Select-Object -First 1
+          if (-not $packageVersion) {
+            throw "PackageVersion was not found in src/Aardvark.Data.E57/Aardvark.Data.E57.csproj"
+          }
+          "PACKAGE_VERSION=$packageVersion" | Out-File -FilePath $env:GITHUB_ENV -Append
+
       - name: Pack E57
         shell: cmd
-        run: dotnet pack src\Aardvark.Data.E57\Aardvark.Data.E57.csproj -c Release --no-build -o bin\pack
+        run: dotnet pack src\Aardvark.Data.E57\Aardvark.Data.E57.csproj -c Release --no-build -o bin\pack -p:Version=%PACKAGE_VERSION% -p:PackageVersion=%PACKAGE_VERSION%
 
       - name: Add private NuGet source
         shell: cmd
