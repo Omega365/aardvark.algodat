@@ -1,0 +1,48 @@
+name: Publish E57
+
+on:
+  push:
+    branches:
+      - master
+    paths:
+      - src/Aardvark.Data.E57/**
+      - src/Aardvark.Data.Points.Base/**
+      - .github/workflows/publish-e57.yml
+  workflow_dispatch:
+
+jobs:
+  publish-e57:
+    name: Pack and publish Aardvark.Data.E57
+    runs-on: windows-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Dotnet
+        uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: global.json
+
+      - name: Restore Tools
+        run: dotnet tool restore
+
+      - name: Restore Paket
+        run: dotnet paket restore
+
+      - name: Build E57
+        shell: cmd
+        run: dotnet build -c Release src\Aardvark.Data.E57\Aardvark.Data.E57.csproj
+
+      - name: Pack E57
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        shell: cmd
+        run: dotnet aardpack src\Aardvark.Data.E57\Aardvark.Data.E57.csproj --notag --skip-build
+
+      - name: Add private NuGet source
+        shell: cmd
+        run: dotnet nuget add source "${{ secrets.OMEGA365_NUGET_URL }}" -n Omega365 -u unused -p "${{ secrets.O365_NUGET_API_KEY }}" --store-password-in-clear-text
+
+      - name: Push E57 package to private feed
+        shell: cmd
+        run: dotnet nuget push "bin\pack\Aardvark.Data.E57*.nupkg" -s Omega365 -k az --skip-duplicate
