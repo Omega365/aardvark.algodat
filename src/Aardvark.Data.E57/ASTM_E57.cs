@@ -490,13 +490,16 @@ namespace Aardvark.Data.E57
             internal static E57CompressedVector Parse(XElement root, Stream stream, bool verbose)
             {
                 if (root == null) return null;
-                
+
+                var codecsElement = GetElement(root, "codecs");
                 var v = new E57CompressedVector
                 {
                     FileOffset = GetPhysicalOffsetAttribute(root, "fileOffset"), 
                     RecordCount = GetLongAttribute(root, "recordCount"),
                     Prototype = E57Structure.Parse(GetElement(root, "prototype"), stream, verbose),
-                    Codecs = [.. GetElement(root, "codecs").Elements().Select(x => (E57Codec)ParseE57Element(x, stream, verbose))],
+                    Codecs = codecsElement == null
+                        ? []
+                        : [.. codecsElement.Elements().Select(x => (E57Codec)ParseE57Element(x, stream, verbose))],
                     m_stream = stream
                 };
 
