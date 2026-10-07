@@ -17,6 +17,9 @@ on:
 #     - '.claude/'
   workflow_dispatch:
 
+permissions:
+  contents: read
+
 jobs:
   build:
     runs-on: ${{ matrix.os }}
