@@ -10,6 +10,9 @@ on:
       - .github/workflows/publish-e57.yml
   workflow_dispatch:
 
+permissions:
+  contents: read
+
 jobs:
   publish-e57:
     name: Pack and publish Aardvark.Data.E57

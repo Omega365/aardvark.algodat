@@ -7,6 +7,11 @@ on:
 #       - RELEASE_NOTES.md
 #       - .github/workflows/publish.yml
     workflow_dispatch:
+
+permissions:
+  contents: read
+  packages: write
+
 jobs:
   pack:
     name: Package
